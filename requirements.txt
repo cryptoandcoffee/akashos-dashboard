@@ -1,0 +1,4 @@
+Flask_Cors==3.0.10
+py_cpuinfo==9.0.0
+Requests==2.31.0
+speedtest_cli==2.1.4b1
