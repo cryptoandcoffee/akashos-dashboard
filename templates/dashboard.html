@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Akash Provider Dashboard</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.0/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.min.js"></script>
+    <style>
+        body {
+            padding-top: 60px;
+        }
+    </style>
+</head>
+<body>
+<nav class="navbar navbar-expand-lg navbar-dark bg-dark fixed-top">
+    <a class="navbar-brand" href="/">Akash Provider Dashboard</a>
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+        <ul class="navbar-nav ml-auto">
+            <li class="nav-item">
+                <a class="nav-link" href="http://akashdash.com/profit/{{ variables['DOMAIN'] }}">AkashDash</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="https://akashexplorer.com/akash/account/{{ variables['ACCOUNT_ADDRESS'] }}">AkashExplorer</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="http://akashcalculator.com">AkashCalculator</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="#">
+                    Wallet Balance: {{ balance }} AKT
+                    {% if balance < 5 %}
+                        <span style="font-size: 18px; color: red;">&#9888;</span>
+                    {% elif balance < 50 %}
+                        <span style="font-size: 18px; color: yellow;">&#128161;</span>
+                    {% else %}
+                        <span style="font-size: 18px; color: green;">&#128512;</span>
+                    {% endif %}
+                </a>
+            </li>
+        </ul>
+    </div>
+</nav>
+
+<div class="container mt-4">
+    {% with messages = get_flashed_messages() %}
+        {% if messages %}
+            <div class="alert alert-success">
+                {% for message in messages %}
+                    {{ message }}<br>
+                {% endfor %}
+            </div>
+        {% endif %}
+    {% endwith %}
+
+<!--
+    <h4 class="mb-3">Local IP Address  : {{ local_ip }}</h4>
+    <h4 class="mb-3">Public IP Address : {{ public_ip }}</h4>
+-->
+    <form method="POST" onsubmit="return confirmFormSubmission()">
+
+<p>Wallet Balance: {{ balance }} AKT</p>
+{% if balance < 5 %}
+    <p><span style="font-size: 32px; color: red;">&#9888;</span> Low balance! Please add funds. Bidding has likely been interrupted.</p>
+{% elif balance < 50 %}
+    <p><span style="font-size: 32px; color: yellow;">&#128161;</span> Warning: Balance is low. Provider needs more AKT to keep bidding.</p>
+{% else %}
+    <p><span style="font-size: 32px; color: green;">&#128512;</span> Balance is good.</p>
+{% endif %}
+
+    <h2>Akash Details</h2>
+        <div class="row">
+            <div class="col-md-6">
+                <div class="form-group">
+                    <label for="DOMAIN">DOMAIN</label>
+                    <input type="text" id="DOMAIN" name="DOMAIN" value="{{ variables['DOMAIN'] }}" class="form-control" readonly>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="form-group">
+                    <label for="ACCOUNT_ADDRESS">ACCOUNT_ADDRESS</label>
+                    <input type="text" id="ACCOUNT_ADDRESS" name="ACCOUNT_ADDRESS" value="{{ variables['ACCOUNT_ADDRESS'] }}" class="form-control" readonly>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="form-group">
+                    <label for="KEY_SECRET">KEY_SECRET</label>
+                    <input type="text" id="KEY_SECRET" name="KEY_SECRET" value="{{ variables['KEY_SECRET'] }}" class="form-control" readonly>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="form-group">
+                    <label for="KUBECONFIG">KUBECONFIG</label>
+                    <input type="text" id="KUBECONFIG" name="KUBECONFIG" value="{{ variables['KUBECONFIG'] }}" class="form-control" readonly>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="form-group">
+                    <label for="LOCAL_IP">LOCAL IP</label>
+                    <input type="text" id="LOCAL_IP" name="LOCAL_IP" value="{{ local_ip }}" class="form-control" readonly>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="form-group">
+                    <label for="PUBLIC_IP">PUBLIC_IP</label>
+                    <input type="text" id="PUBLIC_IP" name="PUBLIC_IP" value="{{ public_ip }}" class="form-control" readonly>
+                </div>
+            </div>
+
+
+        </div>
+
+    <h2>Host Details</h2>
+    <div class="row">
+        <div class="col-md-6">
+            <div class="form-group">
+                <label for="REGION">REGION : {{ region }}</label>
+                <input type="text" id="REGION" name="REGION" value="{{ variables['REGION'] }}" class="form-control">
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="form-group">
+                <label for="CPU">CPU : {{ processor }}</label>
+                <input type="text" id="CPU" name="CPU" value="{{ variables['CPU'] }}" class="form-control">
+            </div>
+        </div>
+
+        <div class="col-md-6">
+            <div class="form-group">
+                <label for="UPLOAD">UPLOAD SPEED</label>
+                <input type="text" id="UPLOAD" name="UPLOAD" value="{{ variables['UPLOAD'] }}" class="form-control">
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="form-group">
+                <label for="DOWNLOAD">DOWNLOAD SPEED</label>
+                <input type="text" id="DOWNLOAD" name="DOWNLOAD" value="{{ variables['DOWNLOAD'] }}" class="form-control">
+            </div>
+        </div>
+    </div>
+
+    <h2>Provider Pricing</h2>
+    <div class="row">
+        <div class="col-md-6">
+            <div class="form-group">
+                <label for="CPU_PRICE">CPU_PRICE</label>
+                <input type="text" id="CPU_PRICE" name="CPU_PRICE" value="{{ variables['CPU_PRICE'] }}" class="form-control">
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="form-group">
+                <label for="MEMORY_PRICE">MEMORY_PRICE</label>
+                <input type="text" id="MEMORY_PRICE" name="MEMORY_PRICE" value="{{ variables['MEMORY_PRICE'] }}" class="form-control">
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="form-group">
+                <label for="DISK_PRICE">DISK_PRICE</label>
+                <input type="text" id="DISK_PRICE" name="DISK_PRICE" value="{{ variables['DISK_PRICE'] }}" class="form-control">
+            </div>
+        </div>
+    </div>
+
+        <button type="submit" class="btn btn-success mt-3">Save</button>
+        <a class="btn btn-primary mt-3" href="/download_variables">Download Variables</a>
+</form>
+
+    <h2>Download Key</h2>
+    <a class="btn btn-primary mt-3" href="/download_key">Download Key</a>
+
+    <h2>Download Kubeconfig</h2>
+    <a class="btn btn-primary mt-3" href="/download_kubeconfig">Download Kubeconfig</a>
+
+    <h2>Required Ports</h2>
+    <div class="card mt-3">
+        <div class="card-body">
+            <p>Please create forwarding rules on your router to {{ local_ip }} for these ports</p>
+            <div class="table-responsive">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Port</th>
+                            <th>Description</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>8443/tcp</td>
+                            <td>for manifest uploads</td>
+                            <td>
+                                <span id="port-8443-status" class="emoji-unknown">❓</span>
+                                <button class="btn btn-primary btn-sm" onclick="checkPort('8443')">Check</button>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>80/tcp</td>
+                            <td>for web app deployments</td>
+                            <td>
+                                <span id="port-80-status" class="emoji-unknown">❓</span>
+                                <button class="btn btn-primary btn-sm" onclick="checkPort('80')">Check</button>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>443/tcp</td>
+                            <td>for web app deployments</td>
+                            <td>
+                                <span id="port-443-status" class="emoji-unknown">❓</span>
+                                <button class="btn btn-primary btn-sm" onclick="checkPort('443')">Check</button>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>30000-32767/tcp+udp</td>
+                            <td>for Kubernetes node port range for deployments</td>
+                            <td>
+                                <span id="port-30000-status" class="emoji-unknown">❓</span>
+                                <button class="btn btn-primary btn-sm" onclick="checkPort('30000')">Check</button>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <h2>DNS Records</h2>
+    <div class="card mt-3">
+        <div class="card-body">
+            <p>Check DNS records for {{ variables['DOMAIN'] }}</p>
+            <div class="table-responsive">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Record Detail</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>provider.{{ variables['DOMAIN'] }}</td>
+                            <td>provider 300 IN CNAME nodes.{{ variables['DOMAIN'] }}_.</td>
+                            <td>
+                                <span id="record-provider-status" class="emoji-unknown">❓</span>
+                                <button class="btn btn-primary btn-sm" onclick="checkRecord('provider', '{{ variables['DOMAIN'] }}')">Check</button>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>nodes.{{ variables['DOMAIN'] }}</td>
+                            <td>nodes 300 IN A {{ public_ip }}. #IP of this machine</td>
+                            <td>
+                                <span id="record-nodes-status" class="emoji-unknown">❓</span>
+                                <button class="btn btn-primary btn-sm" onclick="checkRecord('nodes', '{{ variables['DOMAIN'] }}')">Check</button>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>rpc.{{ variables['DOMAIN'] }}</td>
+                            <td>rpc 300 IN CNAME nodes.{{ variables['DOMAIN'] }}_.</td>
+                            <td>
+                                <span id="record-rpc-status" class="emoji-unknown">❓</span>
+                                <button class="btn btn-primary btn-sm" onclick="checkRecord('rpc', '{{ variables['DOMAIN'] }}')">Check</button>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>*.ingress.{{ variables['DOMAIN'] }}</td>
+                            <td>*.ingress 300 IN CNAME nodes.{{ variables['DOMAIN'] }}_.</td>
+                            <td>
+                                <span id="record-ingress-status" class="emoji-unknown">❓</span>
+                                <button class="btn btn-primary btn-sm" onclick="checkRecord('ingress', '{{ variables['DOMAIN'] }}')">Check</button>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+
+    function confirmFormSubmission() {
+        return confirm("Save Changes?");
+    }
+
+    function checkPort(port) {
+        var url = "http://193.29.62.183:8081/check-port?port=" + port;
+
+        fetch(url)
+            .then(function(response) {
+                return response.json();
+            })
+            .then(function(data) {
+                var statusElement = document.querySelector("#port-" + port + "-status");
+
+                if (data.status === "open") {
+                    statusElement.className = "emoji-green";
+                    statusElement.innerText = "🟢 OPEN";
+                } else {
+                    statusElement.className = "emoji-red";
+                    statusElement.innerText = "🔴 CLOSED";
+                }
+            })
+            .catch(function(error) {
+                console.log("Error occurred while checking the port:", error);
+            });
+    }
+
+    function checkRecord(recordType, domain) {
+        var record = recordType + "." + domain;
+        var checkRecordUrl = "http://193.29.62.183:8081/check-record?hostname=" + encodeURIComponent(record);
+
+        fetch(checkRecordUrl)
+            .then(function(response) {
+                return response.json();
+            })
+            .then(function(data) {
+                var statusElement = document.querySelector("#record-" + recordType + "-status");
+
+                if (data.valid) {
+                    statusElement.className = "emoji-green";
+                    statusElement.innerText = "✅ Valid";
+                } else {
+                    statusElement.className = "emoji-red";
+                    statusElement.innerText = "❌ Invalid";
+                }
+            })
+            .catch(function(error) {
+                console.log("Error occurred while checking the DNS record:", error);
+            });
+    }
+</script>
+</body>
+</html>
