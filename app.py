@@ -50,6 +50,7 @@ def get_balance(account_address):
             if amount:
                 amount = int(amount)  # Convert amount to an integer
                 return amount / 1000000  # Divide amount by 1,000,000
+    return 0  # Set balance to 0 if no balance is found
 
 def get_location(public_ip):
     response = requests.get(f'http://ip-api.com/json/{public_ip}')
@@ -59,9 +60,6 @@ def get_location(public_ip):
 @get_cached_result
 def get_public_ip():
     services = [
-        'https://api.ipify.org',
-        'https://icanhazip.com',
-        'https://ident.me',
         'https://checkip.amazonaws.com'
     ]
 
