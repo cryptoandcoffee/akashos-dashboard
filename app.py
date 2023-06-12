@@ -11,10 +11,6 @@ import platform
 import cpuinfo
 import functools
 import time
-import speedtest
-
-#import pandas as pd
-#from io import StringIO
 
 app = Flask(__name__)
 CORS(app) # This will enable CORS for all routes
@@ -25,24 +21,6 @@ port_check_api = 'http://193.29.62.183:8081/check-port'
 os.environ['KUBECONFIG'] = '/var/snap/microk8s/current/credentials/client.config'
 # Custom cache dictionary to store the cached results
 cache = {}
-
-@app.route('/upload', methods=['POST'])
-def upload():
-    servers = []
-    threads = None
-
-    s = speedtest.Speedtest()
-    s.get_servers(servers)
-    s.get_best_server()
-    s.download(threads=threads)
-    s.upload(pre_allocate=False, threads=threads)
-    s.results.share()
-
-    results_dict = s.results.dict()
-
-    upload_speed = results_dict['upload'] / 1000000  # Convert to Mbps
-
-    return jsonify({'upload_speed': upload_speed})
 
 def get_cached_result(func):
     @functools.wraps(func)
