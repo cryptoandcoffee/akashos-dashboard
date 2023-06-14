@@ -1,12 +1,12 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Akash Provider Dashboard</title>
+    <title>AkashOS Provider Dashboard</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css">
 </head>
 <body>
  <nav class="navbar navbar-expand-lg navbar-dark bg-dark fixed-top">
-    <a class="navbar-brand" href="/">Akash Provider Dashboard</a>
+    <a class="navbar-brand" style="margin-left:15px;" href="/">Akash Provider Dashboard</a>
     <div class="collapse navbar-collapse" id="navbarSupportedContent">
         <ul class="navbar-nav ml-auto">
             <li class="nav-item">
@@ -49,11 +49,11 @@
     <form method="POST" onsubmit="return confirmFormSubmission()">
         <p>Wallet Balance: {{ balance }} AKT</p>
         {% if balance < 5 %}
-            <p><span style="color: red;">&#9888;</span> Low balance! Please add funds. Bidding has likely been interrupted.</p>
+            <p><span style="font-size: 18px; color: red;">&#9888;</span> Low balance! Please add funds. Bidding has likely been interrupted.</p>
         {% elif balance < 50 %}
-            <p><span style="color: yellow;">&#128161;</span> Warning: Balance is low. Provider needs more AKT to keep bidding.</p>
+            <p><span style="font-size: 18px; color: yellow;">&#128161;</span> Warning: Balance is low. Provider needs more AKT to keep bidding.</p>
         {% else %}
-            <p><span style="color: green;">&#128512;</span> Balance is good.</p>
+            <p><span style="font-size: 18px; color: green;">&#128512;</span> Balance is good.</p>
         {% endif %}
 
         <h2>Akash Details</h2>
@@ -309,3 +309,4 @@
 </script>
 </body>
 </html>
+
