@@ -38,6 +38,7 @@ def get_cached_result(func):
 
     return wrapper
 
+@get_cached_result
 def get_balance(account_address):
     response = requests.get(f'https://akash-api.global.ssl.fastly.net/cosmos/bank/v1beta1/balances/{account_address}')
     data = response.json()
@@ -52,10 +53,14 @@ def get_balance(account_address):
                 return amount / 1000000  # Divide amount by 1,000,000
     return 0  # Set balance to 0 if no balance is found
 
+@get_cached_result
 def get_location(public_ip):
-    response = requests.get(f'http://ip-api.com/json/{public_ip}')
-    data = response.json()
-    return data['regionName']
+    try:
+        response = requests.get(f'http://ip-api.com/json/{public_ip}')
+        data = response.json()
+        return data['regionName']
+    except:
+        return "Unknown"
 
 @get_cached_result
 def get_public_ip():
