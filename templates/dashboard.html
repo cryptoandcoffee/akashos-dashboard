@@ -49,11 +49,11 @@
     <form method="POST" onsubmit="return confirmFormSubmission()">
         <p>Wallet Balance: {{ balance }} AKT</p>
         {% if balance < 5 %}
-            <p><span style="font-size: 18px; color: red;">&#9888;</span> Low balance! Please add funds. Bidding has likely been interrupted.</p>
+            <p><span style="font-size: 18px; color: red;">&#9888;</span> Provider has stopped due to low balance. Send at least 5 AKT to "{{ variables['ACCOUNT_ADDRESS'] }}"</p>
         {% elif balance < 50 %}
-            <p><span style="font-size: 18px; color: yellow;">&#128161;</span> Warning: Balance is low. Provider needs more AKT to keep bidding.</p>
+            <p><span style="font-size: 18px; color: yellow;">&#128161;</span> Warning: Balance is low. More funds needed to continue bidding.</p>
         {% else %}
-            <p><span style="font-size: 18px; color: green;">&#128512;</span> Balance is good.</p>
+            <p><span style="font-size: 18px; color: green;">&#128512;</span> Balance is sufficient.</p>
         {% endif %}
 
         <h2>Akash Details</h2>
