@@ -116,10 +116,10 @@ def dashboard():
             return "Account address not found in variables."
 
         account_address = variables['ACCOUNT_ADDRESS']
-        print(account_address)
+        #print(account_address)
         balance = get_balance(account_address)
-        print(balance)
-        #balance = get_balance(variables)
+        #print(balance)
+
         # Read the DNS records file
         with open('/home/akash/dns-records.txt', 'r') as f:
             dns_records = f.read()
@@ -136,11 +136,6 @@ def dashboard():
         info = cpuinfo.get_cpu_info()
         location = get_location(public_ip)
 
-#	response = requests.get(f'http://ip-api.com/json/{public_ip}')
-#	data = response.json()
-
-
-
         if 'AMD' in info['brand_raw']:
             processor = 'AMD'
         elif 'Intel' in info['brand_raw']:
@@ -150,59 +145,6 @@ def dashboard():
 
         # Render the dashboard page with the variables, DNS records, firewall ports, and port status
         return render_template('dashboard.html', variables=variables, dns_records=dns_records, firewall_ports=firewall_ports, local_ip=local_ip, public_ip=public_ip, qr_code=qr_code, processor=info['brand_raw'], region=location, balance=balance)
-
-@app.route('/wallet', methods=['GET', 'POST'])
-def wallet():
-    if request.method == 'POST':
-        # Handle wallet setup or import
-        mnemonic = request.form.get('mnemonic')
-        # Use the mnemonic to setup the wallet using Akash CLI
-        subprocess.run(["akash", "keys", "add", "default", "--recover", mnemonic])
-    else:
-        # Display wallet information
-        # Use Akash CLI to get wallet information
-        wallet_info = subprocess.check_output(["akash", "keys", "show", "default"])
-        balance = subprocess.check_output(["akash", "query", "bank", "balances", "default"])
-        return jsonify(wallet_info=wallet_info, balance=balance)
-
-@app.route('/domain', methods=['GET', 'POST'])
-def domain():
-    if request.method == 'POST':
-        # Handle domain setup
-        domain = request.form.get('domain')
-        # Use the domain to setup the provider using Akash CLI
-        subprocess.run(["akash", "provider", "create", domain])
-    else:
-        # Display domain information
-        # Use Akash CLI to get domain information
-        domain_info = subprocess.check_output(["akash", "provider", "show"])
-        return jsonify(domain_info=domain_info)
-
-@app.route('/dns', methods=['GET', 'POST'])
-def dns():
-    if request.method == 'POST':
-        # Handle DNS setup
-        dns_records = request.form.get('dns_records')
-        # Use the DNS records to setup DNS
-        subprocess.run(["dns-setup-command", dns_records])
-    else:
-        # Display DNS information
-        # Use a DNS lookup tool to get DNS information
-        dns_info = subprocess.check_output(["dns-lookup-command"])
-        return jsonify(dns_info=dns_info)
-
-@app.route('/firewall', methods=['GET', 'POST'])
-def firewall():
-    if request.method == 'POST':
-        # Handle firewall setup
-        firewall_rules = request.form.get('firewall_rules')
-        # Use the firewall rules to setup the firewall
-        subprocess.run(["firewall-setup-command", firewall_rules])
-    else:
-        # Display firewall information
-        # Use a firewall inspection tool to get firewall information
-        firewall_info = subprocess.check_output(["firewall-inspection-command"])
-        return jsonify(firewall_info=firewall_info)
 
 @app.route('/ports', methods=['GET'])
 def ports():
