@@ -1,3 +1,4 @@
+from kubernetes import client, config, watch
 from flask import Flask, render_template, request, jsonify, send_file, url_for, flash, redirect, Markup
 from flask_cors import CORS
 from io import BytesIO
@@ -168,17 +169,99 @@ def download_variables():
 
 @app.route('/download_kubeconfig', methods=['GET'])
 def download_kubeconfig():
-    with open('/var/snap/microk8s/current/credentials/client.config', 'r') as f:
-        kubeconfig = f.read()
+    kubeconfig_path = variables.get('KUBECONFIG')
+    if kubeconfig_path:
+        with open(kubeconfig_path, 'r') as f:
+            kubeconfig = f.read()
 
-    local_ip = get_local_ip()
-    kubeconfig = kubeconfig.replace('https://127.0.0.1:16443', f'https://{local_ip}:16443')
+        local_ip = get_local_ip()
+        kubeconfig = kubeconfig.replace('https://127.0.0.1:16443', f'https://{local_ip}:16443')
 
-    kubeconfig_io = BytesIO()
-    kubeconfig_io.write(kubeconfig.encode())
-    kubeconfig_io.seek(0)
+        kubeconfig_io = BytesIO()
+        kubeconfig_io.write(kubeconfig.encode())
+        kubeconfig_io.seek(0)
 
-    return send_file(kubeconfig_io, as_attachment=True, attachment_filename='kubeconfig-akashos')
+        return send_file(kubeconfig_io, as_attachment=True, attachment_filename='kubeconfig-akashos')
+    else:
+        return "KUBECONFIG variable not found in variables."
+
+@app.route('/stop_service', methods=['POST'])
+def stop_service():
+    service_name = request.form.get('service_name')
+    namespace = 'akash-services'
+
+    if service_name == 'rpc':
+        scale_down_stateful_set(namespace, 'akash-node-1')
+    elif service_name == 'provider':
+        scale_down_stateful_set(namespace, 'akash-provider')
+    elif service_name == 'both':
+        scale_down_stateful_set(namespace, 'akash-node-1')
+        scale_down_stateful_set(namespace, 'akash-provider')
+
+    return redirect('/')
+
+
+@app.route('/start_service', methods=['POST'])
+def start_service():
+    service_name = request.form.get('service_name')
+    namespace = 'akash-services'
+
+    if service_name == 'rpc':
+        scale_up_stateful_set(namespace, 'akash-node-1')
+    elif service_name == 'provider':
+        scale_up_stateful_set(namespace, 'akash-provider')
+    elif service_name == 'both':
+        scale_up_stateful_set(namespace, 'akash-node-1')
+        scale_up_stateful_set(namespace, 'akash-provider')
+
+    return redirect('/')
+
+
+@app.route('/restart_service', methods=['POST'])
+def restart_service():
+    service_name = request.form.get('service_name')
+    namespace = 'akash-services'
+
+    if service_name == 'rpc':
+        restart_stateful_set(namespace, 'akash-node-1')
+    elif service_name == 'provider':
+        restart_stateful_set(namespace, 'akash-provider')
+    elif service_name == 'both':
+        restart_stateful_set(namespace, 'akash-node-1')
+        restart_stateful_set(namespace, 'akash-provider')
+
+    return redirect('/')
+
+
+def scale_down_stateful_set(namespace, stateful_set_name):
+    config.load_kube_config()
+    api_instance = client.AppsV1Api()
+
+    stateful_set = api_instance.read_namespaced_stateful_set(stateful_set_name, namespace)
+    stateful_set.spec.replicas = 0
+    api_instance.replace_namespaced_stateful_set(stateful_set_name, namespace, stateful_set)
+
+
+def scale_up_stateful_set(namespace, stateful_set_name):
+    config.load_kube_config()
+    api_instance = client.AppsV1Api()
+
+    stateful_set = api_instance.read_namespaced_stateful_set(stateful_set_name, namespace)
+    stateful_set.spec.replicas = 1
+    api_instance.replace_namespaced_stateful_set(stateful_set_name, namespace, stateful_set)
+
+
+def restart_stateful_set(namespace, stateful_set_name):
+    config.load_kube_config()
+    api_instance = client.AppsV1Api()
+
+    body = client.V1beta1RollbackConfig()
+    body.rollback_to = client.V1beta1RollbackDeployment()
+    body.rollback_to.revision = 0
+    body.rollback_to.rollback_to = None
+
+    api_instance.create_namespaced_stateful_set_rollback(stateful_set_name, namespace, body)
+
 
 if __name__ == '__main__':
     app.run(debug=True)
