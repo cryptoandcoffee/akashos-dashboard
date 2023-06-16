@@ -1,7 +1,8 @@
 from kubernetes import client, config, watch
-from flask import Flask, render_template, request, jsonify, send_file, url_for, flash, redirect, Markup
+from kubernetes.client.exceptions import ApiException
+from flask_sse import sse
+from flask import Flask, render_template, request, jsonify, send_file, flash, redirect, Response
 from flask_cors import CORS
-from io import BytesIO
 import subprocess
 import os
 import socket
@@ -14,14 +15,14 @@ import functools
 import time
 
 app = Flask(__name__)
-CORS(app) # This will enable CORS for all routes
+CORS(app)  # This will enable CORS for all routes
 
 app.secret_key = 'my_secret_key'
 port_check_api = 'http://193.29.62.183:8081/check-port'
 
-os.environ['KUBECONFIG'] = '/var/snap/microk8s/current/credentials/client.config'
 # Custom cache dictionary to store the cached results
 cache = {}
+
 
 def get_cached_result(func):
     @functools.wraps(func)
@@ -39,12 +40,11 @@ def get_cached_result(func):
 
     return wrapper
 
+
 @get_cached_result
 def get_balance(account_address):
     response = requests.get(f'https://akash-api.global.ssl.fastly.net/cosmos/bank/v1beta1/balances/{account_address}')
     data = response.json()
-    # print(data)
-
     balances = data.get('balances', [])
     if len(balances) > 0:
         for balance in balances:
@@ -53,6 +53,7 @@ def get_balance(account_address):
                 amount = int(amount)  # Convert amount to an integer
                 return amount / 1000000  # Divide amount by 1,000,000
     return 0  # Set balance to 0 if no balance is found
+
 
 @get_cached_result
 def get_location(public_ip):
@@ -63,9 +64,13 @@ def get_location(public_ip):
     except:
         return "Unknown"
 
+
 @get_cached_result
 def get_public_ip():
     services = [
+        'https://api.ipify.org',
+        'https://icanhazip.com',
+        'https://ident.me',
         'https://checkip.amazonaws.com'
     ]
 
@@ -77,6 +82,7 @@ def get_public_ip():
         except requests.RequestException:
             pass
     return None
+
 
 @get_cached_result
 def get_local_ip():
@@ -95,6 +101,41 @@ def get_local_ip():
         return None
 
 
+
+
+def get_pod_status(api_instance, pod_name, namespace):
+    try:
+        pod_info = api_instance.read_namespaced_pod_status(pod_name, namespace)
+        return pod_info.status.phase
+    except client.exceptions.ApiException as e:
+        if e.status == 404:
+            return 'Not Found'
+        else:
+            # Print the exception for debugging purposes
+            print(f"Exception occurred while retrieving pod status: {str(e)}")
+            return 'Error'
+    except Exception as e:
+        # Print the exception for debugging purposes
+        print(f"Exception occurred while retrieving pod status: {str(e)}")
+        return 'Error'
+
+def check_service_status():
+    try:
+        config.load_kube_config()
+        api_instance = client.CoreV1Api()
+        namespace = 'akash-services'
+
+        rpc_node_status = get_pod_status(api_instance, 'akash-node-1-0', namespace)
+        provider_status = get_pod_status(api_instance, 'akash-provider-0', namespace)
+        both_services_status = 'Online' if rpc_node_status == 'Running' and provider_status == 'Running' else 'Provider Offline'
+
+        return rpc_node_status, provider_status, both_services_status
+    except Exception as e:
+        # Print the exception for debugging purposes
+        print(f"Exception occurred while checking service status: {str(e)}")
+        return 'Error', 'Error', 'Error'
+
+
 @app.route('/', methods=['GET', 'POST'])
 def dashboard():
     if request.method == 'POST':
@@ -105,7 +146,7 @@ def dashboard():
                 f.write(f'{key}={value}\n')
 
         flash('Variables saved successfully. Provider restart is required.', 'success')
-        return redirect(url_for('dashboard'))
+        return redirect('/')
 
     else:
         # Read the variables file
@@ -117,9 +158,7 @@ def dashboard():
             return "Account address not found in variables."
 
         account_address = variables['ACCOUNT_ADDRESS']
-        #print(account_address)
         balance = get_balance(account_address)
-        #print(balance)
 
         # Read the DNS records file
         with open('/home/akash/dns-records.txt', 'r') as f:
@@ -144,14 +183,30 @@ def dashboard():
         else:
             processor = 'Unknown'
 
-        # Render the dashboard page with the variables, DNS records, firewall ports, and port status
-        return render_template('dashboard.html', variables=variables, dns_records=dns_records, firewall_ports=firewall_ports, local_ip=local_ip, public_ip=public_ip, qr_code=qr_code, processor=info['brand_raw'], region=location, balance=balance)
+    # Check service status
+    rpc_node_status, provider_status, both_services_status = check_service_status()
+
+    # Render the dashboard page with the variables, DNS records, firewall ports, and service status
+    return render_template('dashboard.html',
+                           variables=variables,
+                           dns_records=dns_records,
+                           firewall_ports=firewall_ports,
+                           local_ip=local_ip,
+                           public_ip=public_ip,
+                           qr_code=qr_code,
+                           processor=info['brand_raw'],
+                           region=location,
+                           balance=balance,
+                           rpc_node_status=rpc_node_status,
+                           provider_status=provider_status,
+                           both_services_status=both_services_status)
 
 @app.route('/ports', methods=['GET'])
 def ports():
     # Check if ports are reachable and display the information
     ports_info = subprocess.check_output(["port-check-command"])
     return jsonify(ports_info=ports_info)
+
 
 @app.route('/download_key', methods=['GET'])
 def download_key():
@@ -160,6 +215,7 @@ def download_key():
     # subprocess.run(["akash", "keys", "export", "default"])
     return send_file('/home/akash/key.pem', as_attachment=True)
 
+
 @app.route('/download_variables', methods=['GET'])
 def download_variables():
     # Handle private key download
@@ -167,23 +223,188 @@ def download_variables():
     # subprocess.run(["akash", "keys", "export", "default"])
     return send_file('/home/akash/variables', as_attachment=True)
 
+
 @app.route('/download_kubeconfig', methods=['GET'])
 def download_kubeconfig():
+    # Read the variables file
+    with open('/home/akash/variables', 'r') as f:
+        variables = dict(line.strip().split('=') for line in f)
+
     kubeconfig_path = variables.get('KUBECONFIG')
+
     if kubeconfig_path:
-        with open(kubeconfig_path, 'r') as f:
-            kubeconfig = f.read()
-
-        local_ip = get_local_ip()
-        kubeconfig = kubeconfig.replace('https://127.0.0.1:16443', f'https://{local_ip}:16443')
-
-        kubeconfig_io = BytesIO()
-        kubeconfig_io.write(kubeconfig.encode())
-        kubeconfig_io.seek(0)
-
-        return send_file(kubeconfig_io, as_attachment=True, attachment_filename='kubeconfig-akashos')
+        return send_file(kubeconfig_path, as_attachment=True)
     else:
-        return "KUBECONFIG variable not found in variables."
+        return "Kubeconfig path not found in variables."
+
+
+
+
+
+# Function to retrieve the Hostname Operator pod status
+def get_hostname_operator_status():
+    config.load_kube_config()
+    api_instance = client.CoreV1Api()
+    namespace = 'akash-services'
+    try:
+        # Retrieve the list of all pods in the specified namespace
+        pod_list = api_instance.list_namespaced_pod(namespace)
+
+        # Find the pod with 'corehostname_operator-' in its name
+        hostname_operator_pod = next((pod for pod in pod_list.items if 'akash-hostname-operator-' in pod.metadata.name), None)
+
+        if hostname_operator_pod is not None:
+            # Retrieve the status of the 'coredns-' pod
+            pod_info = api_instance.read_namespaced_pod_status(hostname_operator_pod.metadata.name, namespace)
+            return pod_info.status.phase
+        else:
+            # If no pod with 'coredns-' in its name is found, return 'Not Found'
+            return 'Not Found'
+
+    except ApiException as e:
+        # Handle Kubernetes API exceptions
+        if e.status == 404:
+            return 'Not Found'
+        else:
+            print(f"APIException occurred while retrieving hostname_operator pod status: {str(e)}")
+            return 'Error'
+    except Exception as e:
+        # Handle any other exceptions that occur during retrieval
+        print(f"Exception occurred while retrieving hostname_operator pod status: {str(e)}")
+        return 'Error'
+# Function to subscribe to hostname_operator status updates
+def subscribe_to_hostname_operator_status():
+    while True:
+        # Retrieve the hostname_operator status
+        hostname_operator_status = get_hostname_operator_status()
+
+        # Yield the hostname_operator status as SSE data
+        yield 'data: ' + json.dumps({'status': hostname_operator_status}) + '\n\n'
+
+@app.route('/stream/hostname_operator_status', methods=['GET'])
+def stream_hostname_operator_status():
+    return Response(subscribe_to_hostname_operator_status(), mimetype='text/event-stream')
+
+
+
+# Function to retrieve the DNS pod status
+def get_dns_status():
+    config.load_kube_config()
+    api_instance = client.CoreV1Api()
+    namespace = 'kube-system'
+    try:
+        # Retrieve the list of all pods in the specified namespace
+        pod_list = api_instance.list_namespaced_pod(namespace)
+
+        # Find the pod with 'coredns-' in its name
+        coredns_pod = next((pod for pod in pod_list.items if 'coredns-' in pod.metadata.name), None)
+
+        if coredns_pod is not None:
+            # Retrieve the status of the 'coredns-' pod
+            pod_info = api_instance.read_namespaced_pod_status(coredns_pod.metadata.name, namespace)
+            return pod_info.status.phase
+        else:
+            # If no pod with 'coredns-' in its name is found, return 'Not Found'
+            return 'Not Found'
+
+    except ApiException as e:
+        # Handle Kubernetes API exceptions
+        if e.status == 404:
+            return 'Not Found'
+        else:
+            print(f"APIException occurred while retrieving DNS pod status: {str(e)}")
+            return 'Error'
+    except Exception as e:
+        # Handle any other exceptions that occur during retrieval
+        print(f"Exception occurred while retrieving DNS pod status: {str(e)}")
+        return 'Error'
+
+# Function to subscribe to dns status updates
+def subscribe_to_dns_status():
+    while True:
+        # Retrieve the dns status
+        dns_status = get_dns_status()
+
+        # Yield the dns status as SSE data
+        yield 'data: ' + json.dumps({'status': dns_status}) + '\n\n'
+
+@app.route('/stream/dns_status', methods=['GET'])
+def stream_dns_status():
+    return Response(subscribe_to_dns_status(), mimetype='text/event-stream')
+
+
+# Function to retrieve the Provider pod status
+def get_provider_status():
+    config.load_kube_config()
+    api_instance = client.CoreV1Api()
+    namespace = 'akash-services'
+    try:
+        # Retrieve the provider pod status from Kubernetes
+        pod_info = api_instance.read_namespaced_pod_status('akash-provider-0', namespace)
+        return pod_info.status.phase
+    except ApiException as e:
+        # Handle Kubernetes API exceptions
+        if e.status == 404:
+            return 'Not Found'
+        else:
+            print(f"APIException occurred while retrieving provider pod status: {str(e)}")
+            return 'Error'
+    except Exception as e:
+        # Handle any other exceptions that occur during retrieval
+        print(f"Exception occurred while retrieving provider pod status: {str(e)}")
+        return 'Error'
+
+# Function to subscribe to provider status updates
+def subscribe_to_provider_status():
+    while True:
+        # Retrieve the provider status
+        provider_status = get_provider_status()
+
+        # Yield the provider status as SSE data
+        yield 'data: ' + json.dumps({'status': provider_status}) + '\n\n'
+
+@app.route('/stream/provider_status', methods=['GET'])
+def stream_provider_status():
+    return Response(subscribe_to_provider_status(), mimetype='text/event-stream')
+
+
+
+
+# Function to retrieve the RPC pod status
+def get_rpc_status():
+    config.load_kube_config()
+    api_instance = client.CoreV1Api()
+    namespace = 'akash-services'
+    try:
+        # Retrieve the RPC pod status from Kubernetes
+        pod_info = api_instance.read_namespaced_pod_status('akash-node-1-0', namespace)
+        return pod_info.status.phase
+    except ApiException as e:
+        # Handle Kubernetes API exceptions
+        if e.status == 404:
+            return 'Not Found'
+        else:
+            print(f"APIException occurred while retrieving RPC pod status: {str(e)}")
+            return 'Error'
+    except Exception as e:
+        # Handle any other exceptions that occur during retrieval
+        print(f"Exception occurred while retrieving RPC pod status: {str(e)}")
+        return 'Error'
+
+# Function to subscribe to RPC status updates
+def subscribe_to_rpc_status():
+    while True:
+        # Retrieve the RPC status
+        rpc_status = get_rpc_status()
+
+        # Yield the RPC status as SSE data
+        yield 'data: ' + json.dumps({'status': rpc_status}) + '\n\n'
+
+@app.route('/stream/rpc_status', methods=['GET'])
+def stream_rpc_status():
+    return Response(subscribe_to_rpc_status(), mimetype='text/event-stream')
+
+
 
 @app.route('/stop_service', methods=['POST'])
 def stop_service():
@@ -223,14 +444,44 @@ def restart_service():
     namespace = 'akash-services'
 
     if service_name == 'rpc':
-        restart_stateful_set(namespace, 'akash-node-1')
+        scale_down_stateful_set(namespace, 'akash-node-1')
+        scale_up_stateful_set(namespace, 'akash-node-1')
+
     elif service_name == 'provider':
-        restart_stateful_set(namespace, 'akash-provider')
+        scale_down_stateful_set(namespace, 'akash-provider')
+        scale_up_stateful_set(namespace, 'akash-provder')
+
     elif service_name == 'both':
-        restart_stateful_set(namespace, 'akash-node-1')
-        restart_stateful_set(namespace, 'akash-provider')
+        scale_down_stateful_set(namespace, 'akash-node-1')
+        scale_up_stateful_set(namespace, 'akash-node-1')
+        scale_down_stateful_set(namespace, 'akash-provider')
+        scale_up_stateful_set(namespace, 'akash-provder')
+
 
     return redirect('/')
+
+@app.route('/get_service_status', methods=['POST'])
+def get_service_status():
+
+    config.load_kube_config()
+    api_instance = client.CoreV1Api()
+    namespace = 'akash-services'
+
+    # Get status for RPC Node
+    rpc_node_status = get_pod_status(api_instance, 'akash-node-1', namespace)
+
+    # Get status for Provider
+    provider_status = get_pod_status(api_instance, 'akash-provider', namespace)
+
+    # Get status for both services
+    both_services_status = 'Online' if rpc_node_status == 'Running' and provider_status == 'Running' else 'Offline'
+
+    return jsonify({
+        'rpc_node_status': rpc_node_status,
+        'provider_status': provider_status,
+        'both_services_status': both_services_status
+    })
+
 
 
 def scale_down_stateful_set(namespace, stateful_set_name):
@@ -262,6 +513,8 @@ def restart_stateful_set(namespace, stateful_set_name):
 
     api_instance.create_namespaced_stateful_set_rollback(stateful_set_name, namespace, body)
 
+
+# Usage
 
 if __name__ == '__main__':
     app.run(debug=True)
