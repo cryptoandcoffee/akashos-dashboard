@@ -1,7 +1,8 @@
 kubernetes
-Flask_Cors
+flask_cors
+flask_sse
 py_cpuinfo
-Requests
+requests
 speedtest_cli
 #For unicorn and sse
 gevent
