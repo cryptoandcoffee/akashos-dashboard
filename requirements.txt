@@ -1,3 +1,4 @@
+kubernetes
 Flask_Cors
 py_cpuinfo
 Requests
