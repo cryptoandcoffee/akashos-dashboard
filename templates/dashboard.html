@@ -24,7 +24,7 @@
                     {% if balance < 5 %}
                         <span style="font-size: 18px; color: red;">&#9888;</span>
                     {% elif balance < 50 %}
-                        <span style="font-size: 18px; color: yellow;">&#128161;</span>
+                        <span style="font-size: 18px; color: black;">&#128161;</span>
                     {% else %}
                         <span style="font-size: 18px; color: green;">&#128512;</span>
                     {% endif %}
@@ -51,7 +51,7 @@
         {% if balance < 5 %}
             <p><span style="font-size: 18px; color: red;">&#9888;</span> Provider has stopped due to low balance. Send at least 5 AKT to "{{ variables['ACCOUNT_ADDRESS'] }}"</p>
         {% elif balance < 50 %}
-            <p><span style="font-size: 18px; color: yellow;">&#128161;</span> Warning: Balance is low. More funds needed to continue bidding.</p>
+            <p><span style="font-size: 18px; color: black;">&#128161;</span> Warning: Balance is low. More funds needed to continue bidding.</p>
         {% else %}
             <p><span style="font-size: 18px; color: green;">&#128512;</span> Balance is sufficient.</p>
         {% endif %}
@@ -148,7 +148,133 @@
 
         <button type="submit" class="btn btn-success mt-3">Save</button>
         <a class="btn btn-primary mt-3" href="/download_variables">Download Variables</a>
+
     </form>
+
+
+<h2>Provider Toolbox</h2>
+<div class="card mt-3">
+    <div class="card-body">
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Service</th>
+                    <th>Action</th>
+		    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>Akash RPC Node</td>
+                    <td>
+                        <form action="/stop_service" method="POST" style="display: inline;">
+                            <input type="hidden" name="service_name" value="rpc">
+                            <button class="btn btn-primary btn-sm">Stop</button>
+                        </form>
+                        <form action="/start_service" method="POST" style="display: inline;">
+                            <input type="hidden" name="service_name" value="rpc">
+                            <button class="btn btn-primary btn-sm">Start</button>
+                        </form>
+                        <form action="/restart_service" method="POST" style="display: inline;">
+                            <input type="hidden" name="service_name" value="rpc">
+                            <button class="btn btn-primary btn-sm">Restart</button>
+                        </form>
+                    </td>
+                    <td id="rpc-status">
+                        <!-- RPC Node status will be updated dynamically here -->
+                    </td>
+                </tr>
+                <tr>
+                    <td>CoreDNS</td>
+                    <td>
+                        <form action="/stop_service" method="POST" style="display: inline;">
+                            <input type="hidden" name="service_name" value="coredns">
+                            <button class="btn btn-primary btn-sm">Stop</button>
+                        </form>
+                        <form action="/start_service" method="POST" style="display: inline;">
+                            <input type="hidden" name="service_name" value="coredns">
+                            <button class="btn btn-primary btn-sm">Start</button>
+                        </form>
+                        <form action="/restart_service" method="POST" style="display: inline;">
+                            <input type="hidden" name="service_name" value="coredns">
+                            <button class="btn btn-primary btn-sm">Restart</button>
+                        </form>
+                    </td>
+                    <td id="dns-status">
+                        <!-- RPC Node status will be updated dynamically here -->
+                    </td>
+                </tr>
+                <tr>
+                    <td>Akash Hostname Operator</td>
+                    <td>
+                        <form action="/stop_service" method="POST" style="display: inline;">
+                            <input type="hidden" name="service_name" value="akash_hostname_operator">
+                            <button class="btn btn-primary btn-sm">Stop</button>
+                        </form>
+                        <form action="/start_service" method="POST" style="display: inline;">
+                            <input type="hidden" name="service_name" value="akash_hostname_operator">
+                            <button class="btn btn-primary btn-sm">Start</button>
+                        </form>
+                        <form action="/restart_service" method="POST" style="display: inline;">
+                            <input type="hidden" name="service_name" value="akash_hostname_operator">
+                            <button class="btn btn-primary btn-sm">Restart</button>
+                        </form>
+                    </td>
+                    <td id="hostname-operator-status">
+                        <!-- RPC Node status will be updated dynamically here -->
+                    </td>
+                </tr>
+                <tr>
+                    <td>Akash Provider</td>
+                    <td>
+                        <form action="/stop_service" method="POST" style="display: inline;">
+                            <input type="hidden" name="service_name" value="provider">
+                            <button class="btn btn-primary btn-sm">Stop</button>
+                        </form>
+                        <form action="/start_service" method="POST" style="display: inline;">
+                            <input type="hidden" name="service_name" value="provider">
+                            <button class="btn btn-primary btn-sm">Start</button>
+                        </form>
+                        <form action="/restart_service" method="POST" style="display: inline;">
+                            <input type="hidden" name="service_name" value="provider">
+                            <button class="btn btn-primary btn-sm">Restart</button>
+                        </form>
+                    </td>
+                    <td id="provider-status">
+                        <!-- Provider status will be updated dynamically here -->
+                    </td>
+                </tr>
+                <tr>
+                    <td>All Services</td>
+                    <td>
+                        <form action="/stop_service" method="POST" style="display: inline;">
+                            <input type="hidden" name="service_name" value="both">
+                            <button class="btn btn-primary btn-sm">Stop</button>
+                        </form>
+                        <form action="/start_service" method="POST" style="display: inline;">
+                            <input type="hidden" name="service_name" value="both">
+                            <button class="btn btn-primary btn-sm">Start</button>
+                        </form>
+                        <form action="/restart_service" method="POST" style="display: inline;">
+                            <input type="hidden" name="service_name" value="both">
+                            <button class="btn btn-primary btn-sm">Restart</button>
+                        </form>
+                    </td>
+                    <td>
+                        {% if both_services_status == 'Online' %}
+                            <span style="color: green;">🟢 Online</span>
+                        {% elif both_services_status == 'Pending' %}
+                            <span style="color: black;">🟡 Pending</span>
+                        {% else %}
+                            <span style="color: red;">🔴 {{ both_services_status }}</span>
+                        {% endif %}
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+
 
     <h2>Download Key</h2>
     <a class="btn btn-primary mt-3" href="/download_key">Download Key</a>
@@ -306,7 +432,151 @@
                 console.log("Error occurred while checking the DNS record:", error);
             });
     }
+
+    function stopService(service) {
+        fetch('/stop_service', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ service: service })
+        })
+        .then(function(response) {
+            if (response.ok) {
+                // Handle successful response
+                alert('Service stopped successfully');
+            } else {
+                // Handle error response
+                alert('Failed to stop service');
+            }
+        })
+        .catch(function(error) {
+            // Handle network error
+            console.log('Error occurred while stopping the service:', error);
+        });
+    }
+
+    function startService(service) {
+        fetch('/start_service', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ service: service })
+        })
+        .then(function(response) {
+            if (response.ok) {
+                // Handle successful response
+                alert('Service started successfully');
+            } else {
+                // Handle error response
+                alert('Failed to start service');
+            }
+        })
+        .catch(function(error) {
+            // Handle network error
+            console.log('Error occurred while starting the service:', error);
+        });
+    }
+
+function restartService(service) {
+    fetch('/restart_service', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ service: service })
+    })
+    .then(function(response) {
+        if (response.ok) {
+            // Handle successful response
+            alert('Service restarted successfully');
+        } else {
+            // Handle error response
+            alert('Failed to restart service');
+        }
+    })
+    .catch(function(error) {
+        // Handle network error
+        console.log('Error occurred while restarting the service:', error);
+    });
+}
+
+
+// Create an EventSource object to listen for RPC SSE updates
+var rpcEventSource = new EventSource('/stream/rpc_status');
+
+// Event listener for RPC SSE updates
+rpcEventSource.onmessage = function (event) {
+    var response = JSON.parse(event.data);
+    var rpcStatusElement = $('#rpc-status');
+    if (response.status === 'Running') {
+        rpcStatusElement.html('<span style="color: green;">🟢 Running</span>');
+    } else if (response.status === 'Pending') {
+        rpcStatusElement.html('<span style="color: black;">🟡 Pending</span>');
+    } else if (response.status === 'Terminating') {
+        rpcStatusElement.html('<span style="color: black;">🟠 Terminating</span>');
+    } else {
+        rpcStatusElement.html('<span style="color: red;">🔴 ' + response.status + '</span>');
+    }
+};
+
+// Create an EventSource object to listen for Provider SSE updates
+var providerEventSource = new EventSource('/stream/provider_status');
+
+// Event listener for Provider SSE updates
+providerEventSource.onmessage = function (event) {
+    var response = JSON.parse(event.data);
+    var providerStatusElement = $('#provider-status');
+    if (response.status === 'Running') {
+        providerStatusElement.html('<span style="color: green;">🟢 Running</span>');
+    } else if (response.status === 'Pending') {
+        providerStatusElement.html('<span style="color: black;">🟡 Pending</span>');
+    } else if (response.status === 'Terminating') {
+        providerStatusElement.html('<span style="color: black;">🟠 Terminating</span>');
+    } else {
+        providerStatusElement.html('<span style="color: red;">🔴 ' + response.status + '</span>');
+    }
+};
+
+// Create an EventSource object to listen for dns SSE updates
+var dnsEventSource = new EventSource('/stream/dns_status');
+
+// Event listener for dns SSE updates
+dnsEventSource.onmessage = function (event) {
+    var response = JSON.parse(event.data);
+    var dnsStatusElement = $('#dns-status');
+    if (response.status === 'Running') {
+        dnsStatusElement.html('<span style="color: green;">🟢 Running</span>');
+    } else if (response.status === 'Pending') {
+        dnsStatusElement.html('<span style="color: black;">🟡 Pending</span>');
+    } else if (response.status === 'Terminating') {
+        dnsStatusElement.html('<span style="color: black;">🟠 Terminating</span>');
+    } else {
+        dnsStatusElement.html('<span style="color: red;">🔴 ' + response.status + '</span>');
+    }
+};
+
+// Create an EventSource object to listen for dns SSE updates
+var hostname_operatorEventSource = new EventSource('/stream/hostname_operator_status');
+
+// Event listener for hostname_operator SSE updates
+hostname_operatorEventSource.onmessage = function (event) {
+    var response = JSON.parse(event.data);
+    var hostname_operatorStatusElement = $('#hostname-operator-status');
+    if (response.status === 'Running') {
+        hostname_operatorStatusElement.html('<span style="color: green;">🟢 Running</span>');
+    } else if (response.status === 'Pending') {
+        hostname_operatorStatusElement.html('<span style="color: black;">🟡 Pending</span>');
+    } else if (response.status === 'Terminating') {
+        hostname_operatorStatusElement.html('<span style="color: black;">🟠 Terminating</span>');
+    } else {
+        hostname_operatorStatusElement.html('<span style="color: red;">🔴 ' + response.status + '</span>');
+    }
+};
+
+
+
 </script>
 </body>
 </html>
-
