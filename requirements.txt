@@ -3,3 +3,5 @@ Flask_Cors
 py_cpuinfo
 Requests
 speedtest_cli
+#For unicorn and sse
+gevent
