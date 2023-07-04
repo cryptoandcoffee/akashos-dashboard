@@ -393,7 +393,8 @@
 
     function checkPort(port) {
         var publicIp = "{{ public_ip }}";
-	var url = `http://193.29.62.183:8081/check-port?ip=${publicIp}&port=" + port`;
+        var url = "http://193.29.62.183:8081/check-port?ip=" + publicIp + "&port=" + port;
+
         fetch(url)
             .then(function(response) {
                 return response.json();
