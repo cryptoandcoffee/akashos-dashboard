@@ -140,9 +140,18 @@ def check_service_status():
 def dashboard():
     if request.method == 'POST':
         # Save the variables from the form
-        variables = request.form.to_dict()
+        new_variables = request.form.to_dict()
+
+        # Read the existing variables
+        with open('/home/akash/variables', 'r') as f:
+            existing_variables = dict(line.strip().split('=') for line in f)
+
+        # Update the existing variables with the new ones
+        existing_variables.update(new_variables)
+
+        # Write the updated variables back to the file
         with open('/home/akash/variables', 'w') as f:
-            for key, value in variables.items():
+            for key, value in existing_variables.items():
                 f.write(f'{key}={value}\n')
 
         flash('Variables saved successfully. Provider restart is required.', 'success')
