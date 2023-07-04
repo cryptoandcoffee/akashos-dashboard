@@ -231,6 +231,16 @@ def dashboard():
                            provider_status=provider_status,
                            both_services_status=both_services_status)
 
+
+@app.route('/deploy-update', methods=['GET'])
+def deploy_update():
+    script_path = '/home/akash/run-helm-k3s.sh'
+    try:
+        subprocess.run(['bash', script_path], check=True)
+        return 'Deployment script executed successfully', 200
+    except subprocess.CalledProcessError as e:
+        return f'Error executing deployment script: {e}', 500
+
 @app.route('/ports', methods=['GET'])
 def ports():
     # Check if ports are reachable and display the information
