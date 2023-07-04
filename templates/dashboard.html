@@ -36,15 +36,6 @@
 </nav>
 
 <div class="container mt-4">
-    {% with messages = get_flashed_messages() %}
-        {% if messages %}
-            <div class="alert alert-success">
-                {% for message in messages %}
-                    {{ message }}<br>
-                {% endfor %}
-            </div>
-        {% endif %}
-    {% endwith %}
 
     <form method="POST" onsubmit="return confirmFormSubmission()">
         <p>Wallet Balance: {{ balance }} AKT</p>
@@ -56,6 +47,16 @@
             <p><span style="font-size: 18px; color: green;">&#128512;</span> Balance is sufficient.</p>
         {% endif %}
 
+        {% with messages = get_flashed_messages() %}
+            {% if messages %}
+                <div class="alert alert-success">
+                    {% for message in messages %}
+                        {{ message }}<br>
+                    {% endfor %}
+                </div>
+            {% endif %}
+        {% endwith %}
+		
         <h2>Akash Details</h2>
         <div class="row">
             <div class="col-md-6">
