@@ -154,9 +154,27 @@ def dashboard():
             for key, value in existing_variables.items():
                 f.write(f'{key}={value}\n')
 
+        # Update the values in bid-engine-script.sh
+        bid_engine_script_path = '/home/akash/bid-engine-script.sh'
+        with open(bid_engine_script_path, 'r') as f:
+            script_lines = f.readlines()
+
+        updated_script_lines = []
+        for line in script_lines:
+            if line.startswith('TARGET_MEMORY='):
+                line = f'TARGET_MEMORY="{existing_variables.get("TARGET_MEMORY", "")}"\n'
+            elif line.startswith('TARGET_HD='):
+                line = f'TARGET_HD="{existing_variables.get("TARGET_HD", "")}"\n'
+            elif line.startswith('TARGET_CPU='):
+                line = f'TARGET_CPU="{existing_variables.get("TARGET_CPU", "")}"\n'
+            updated_script_lines.append(line)
+
+        with open(bid_engine_script_path, 'w') as f:
+            f.writelines(updated_script_lines)
+
         flash('Variables saved successfully. Provider restart is required.', 'success')
         return redirect('/')
-
+        
     else:
         # Read the variables file
         with open('/home/akash/variables', 'r') as f:
