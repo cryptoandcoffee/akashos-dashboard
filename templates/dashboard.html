@@ -55,6 +55,7 @@
                     {% endfor %}
                 </div>
             {% endif %}
+	<button id="deploy-button" type="button">Deploy Update</button>
         {% endwith %}
 		
         <h2>Akash Details</h2>
@@ -387,99 +388,99 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.0/jquery.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.min.js"></script>
 <script>
-    function confirmFormSubmission() {
-        return confirm("Save Changes?");
-    }
+function confirmFormSubmission() {
+    return confirm("Save Changes?");
+}
 
-    function checkPort(port) {
-        var publicIp = "{{ public_ip }}";
-        var url = "http://193.29.62.183:8081/check-port?ip=" + publicIp + "&port=" + port;
+function checkPort(port) {
+    var publicIp = "{{ public_ip }}";
+    var url = "http://193.29.62.183:8081/check-port?ip=" + publicIp + "&port=" + port;
 
-        fetch(url)
-            .then(function(response) {
-                return response.json();
-            })
-            .then(function(data) {
-                var statusElement = document.querySelector("#port-" + port + "-status");
-
-                if (data.status === "open") {
-                    statusElement.innerText = "🟢 OPEN";
-                } else {
-                    statusElement.innerText = "🔴 CLOSED";
-                }
-            })
-            .catch(function(error) {
-                console.log("Error occurred while checking the port:", error);
-            });
-    }
-
-    function checkRecord(recordType, domain) {
-        var record = recordType + "." + domain;
-        var checkRecordUrl = "http://193.29.62.183:8081/check-record?hostname=" + encodeURIComponent(record);
-
-        fetch(checkRecordUrl)
-            .then(function(response) {
-                return response.json();
-            })
-            .then(function(data) {
-                var statusElement = document.querySelector("#record-" + recordType + "-status");
-
-                if (data.valid) {
-                    statusElement.innerText = "✅ Valid";
-                } else {
-                    statusElement.innerText = "❌ Invalid";
-                }
-            })
-            .catch(function(error) {
-                console.log("Error occurred while checking the DNS record:", error);
-            });
-    }
-
-    function stopService(service) {
-        fetch('/stop_service', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({ service: service })
-        })
+    fetch(url)
         .then(function(response) {
-            if (response.ok) {
-                // Handle successful response
-                alert('Service stopped successfully');
+            return response.json();
+        })
+        .then(function(data) {
+            var statusElement = document.querySelector("#port-" + port + "-status");
+
+            if (data.status === "open") {
+                statusElement.innerText = "🟢 OPEN";
             } else {
-                // Handle error response
-                alert('Failed to stop service');
+                statusElement.innerText = "🔴 CLOSED";
             }
         })
         .catch(function(error) {
-            // Handle network error
-            console.log('Error occurred while stopping the service:', error);
+            console.log("Error occurred while checking the port:", error);
         });
-    }
+}
 
-    function startService(service) {
-        fetch('/start_service', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({ service: service })
-        })
+function checkRecord(recordType, domain) {
+    var record = recordType + "." + domain;
+    var checkRecordUrl = "http://193.29.62.183:8081/check-record?hostname=" + encodeURIComponent(record);
+
+    fetch(checkRecordUrl)
         .then(function(response) {
-            if (response.ok) {
-                // Handle successful response
-                alert('Service started successfully');
+            return response.json();
+        })
+        .then(function(data) {
+            var statusElement = document.querySelector("#record-" + recordType + "-status");
+
+            if (data.valid) {
+                statusElement.innerText = "✅ Valid";
             } else {
-                // Handle error response
-                alert('Failed to start service');
+                statusElement.innerText = "❌ Invalid";
             }
         })
         .catch(function(error) {
-            // Handle network error
-            console.log('Error occurred while starting the service:', error);
+            console.log("Error occurred while checking the DNS record:", error);
         });
-    }
+}
+
+function stopService(service) {
+    fetch('/stop_service', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ service: service })
+    })
+    .then(function(response) {
+        if (response.ok) {
+            // Handle successful response
+            alert('Service stopped successfully');
+        } else {
+            // Handle error response
+            alert('Failed to stop service');
+        }
+    })
+    .catch(function(error) {
+        // Handle network error
+        console.log('Error occurred while stopping the service:', error);
+    });
+}
+
+function startService(service) {
+    fetch('/start_service', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ service: service })
+    })
+    .then(function(response) {
+        if (response.ok) {
+            // Handle successful response
+            alert('Service started successfully');
+        } else {
+            // Handle error response
+            alert('Failed to start service');
+        }
+    })
+    .catch(function(error) {
+        // Handle network error
+        console.log('Error occurred while starting the service:', error);
+    });
+}
 
 function restartService(service) {
     fetch('/restart_service', {
@@ -504,6 +505,20 @@ function restartService(service) {
     });
 }
 
+function deployUpdate() {
+    $.ajax({
+        type: 'GET',
+        url: '/deploy-update',
+        success: function(response) {
+            console.log('Deployment script executed successfully');
+            // Handle success response if needed
+        },
+        error: function(xhr, status, error) {
+            console.log('Error executing deployment script:', error);
+            // Handle error response if needed
+        }
+    });
+}
 
 // Create an EventSource object to listen for RPC SSE updates
 var rpcEventSource = new EventSource('/stream/rpc_status');
@@ -576,9 +591,7 @@ hostname_operatorEventSource.onmessage = function (event) {
         hostname_operatorStatusElement.html('<span style="color: red;">🔴 ' + response.status + '</span>');
     }
 };
-
-
-
 </script>
+
 </body>
 </html>
