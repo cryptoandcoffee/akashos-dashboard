@@ -235,11 +235,14 @@ def dashboard():
 @app.route('/deploy-update', methods=['GET'])
 def deploy_update():
     script_path = '/home/akash/run-helm-k3s.sh'
-    try:
-        subprocess.run(['bash', script_path], check=True)
-        return 'Deployment script executed successfully', 200
-    except subprocess.CalledProcessError as e:
-        return f'Error executing deployment script: {e}', 500
+    user = 'akash'  # Replace 'your_system_user' with the actual system username
+
+    result = subprocess.run(['sudo', '-u', user, 'bash', script_path], shell=False)
+
+    if result.returncode == 0:
+        return 'Script executed successfully.'
+    else:
+        return 'Failed to execute script.'
 
 @app.route('/ports', methods=['GET'])
 def ports():
