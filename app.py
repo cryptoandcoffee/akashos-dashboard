@@ -43,7 +43,18 @@ def get_cached_result(func):
 
 @get_cached_result
 def get_balance(account_address):
-    response = requests.get(f'https://akash-api.global.ssl.fastly.net/cosmos/bank/v1beta1/balances/{account_address}')
+    gpu_enabled = False
+    variables_file_path = '/home/akash/variables'
+
+    if os.path.exists(variables_file_path):
+        with open(variables_file_path, 'r') as variables_file:
+            variables = variables_file.read()
+            if 'GPU_ENABLED=' in variables:
+                gpu_enabled = True
+
+    api_url = 'https://akash-api.global.ssl.fastly.net' if not gpu_enabled else 'https://api.testnet-02.aksh.pw:443'
+
+    response = requests.get(f'{api_url}/cosmos/bank/v1beta1/balances/{account_address}')
     data = response.json()
     balances = data.get('balances', [])
     if len(balances) > 0:
@@ -53,7 +64,6 @@ def get_balance(account_address):
                 amount = int(amount)  # Convert amount to an integer
                 return amount / 1000000  # Divide amount by 1,000,000
     return 0  # Set balance to 0 if no balance is found
-
 
 @get_cached_result
 def get_location(public_ip):
