@@ -52,7 +52,7 @@ def get_balance(account_address):
             if 'GPU_ENABLED=' in variables:
                 gpu_enabled = True
 
-    api_url = 'https://akash-api.global.ssl.fastly.net' if not gpu_enabled else 'https://api.testnet-02.aksh.pw:443'
+    api_url = 'https://akash-rpc.polkachu.com:443' if not gpu_enabled else 'https://akash-rpc.polkachu.com:443'
 
     response = requests.get(f'{api_url}/cosmos/bank/v1beta1/balances/{account_address}')
     data = response.json()
