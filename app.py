@@ -45,25 +45,31 @@ def get_cached_result(func):
 def get_balance(account_address):
     gpu_enabled = False
     variables_file_path = '/home/akash/variables'
-
     if os.path.exists(variables_file_path):
         with open(variables_file_path, 'r') as variables_file:
             variables = variables_file.read()
             if 'GPU_ENABLED=' in variables:
                 gpu_enabled = True
-
     api_url = 'https://akash-rpc.polkachu.com:443' if not gpu_enabled else 'https://akash-rpc.polkachu.com:443'
+    try:
+        with requests.get(f'{api_url}/cosmos/bank/v1beta1/balances/{account_address}') as response:
+            print(f"API Response: {response.text}")  # Debugging line
+            # Check if the request was successful
+            if response.status_code == 200:
+                data = response.json()
+                balances = data.get('balances', [])
+                if len(balances) > 0:
+                    for balance in balances:
+                        amount = balance.get('amount')
+                        if amount:
+                            amount = int(amount)  # Convert amount to an integer
+                            return amount / 1000000  # Divide amount by 1,000,000
+            else:
+                print(f"Failed to get balance. Status code: {response.status_code}")
+    except requests.RequestException as e:
+        print(f"An error occurred while fetching the balance: {e}")
 
-    response = requests.get(f'{api_url}/cosmos/bank/v1beta1/balances/{account_address}')
-    data = response.json()
-    balances = data.get('balances', [])
-    if len(balances) > 0:
-        for balance in balances:
-            amount = balance.get('amount')
-            if amount:
-                amount = int(amount)  # Convert amount to an integer
-                return amount / 1000000  # Divide amount by 1,000,000
-    return 0  # Set balance to 0 if no balance is found
+    return 0  # Set balance to 0 if no balance is found or an error occurs
 
 @get_cached_result
 def get_location(public_ip):
