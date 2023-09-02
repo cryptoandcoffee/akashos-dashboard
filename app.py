@@ -50,7 +50,7 @@ def get_balance(account_address):
             variables = variables_file.read()
             if 'GPU_ENABLED=' in variables:
                 gpu_enabled = True
-    api_url = 'https://akash-rpc.polkachu.com:443' if not gpu_enabled else 'https://akash-rpc.polkachu.com:443'
+    api_url = 'https://akash-api.polkachu.com:443' if not gpu_enabled else 'https://akash-api.polkachu.com:443'
     try:
         with requests.get(f'{api_url}/cosmos/bank/v1beta1/balances/{account_address}') as response:
             print(f"API Response: {response.text}")  # Debugging line
