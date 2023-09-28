@@ -149,7 +149,8 @@
 
         <button type="submit" class="btn btn-success mt-3">Save</button>
         <a class="btn btn-primary mt-3" href="/download_variables">Download Variables</a>
-        <button class="btn btn-primary mt-3" onclick="deployUpdate()">Re-Deploy Provider</button>
+	<button class="btn btn-primary mt-3" onclick="deployUpdate()">Re-Deploy Provider</button>
+	<span id="updateAvailable" class="text-danger"></span>
 
     </form>
 
@@ -614,6 +615,18 @@ hostname_operatorEventSource.onmessage = function (event) {
         hostname_operatorStatusElement.html('<span style="color: red;">🔴 ' + response.status + '</span>');
     }
 };
+
+document.addEventListener('DOMContentLoaded', function() {
+    fetch('/check-helm-versions')
+        .then(response => response.json())
+        .then(data => {
+            if (data.update_available) {
+                document.getElementById('updateAvailable').textContent = 'Update Available: Click Re-Deploy Provider to update now.';
+            }
+        })
+        .catch(error => console.error('Error checking for updates:', error));
+});
+
 </script>
 
 </body>
