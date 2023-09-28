@@ -40,6 +40,55 @@ def get_cached_result(func):
 
     return wrapper
 
+# Check Helm versions installed vs. in repo
+@app.route('/check-helm-versions', methods=['GET'])
+def check_helm_versions():
+    try:
+        # Get the deployed helm chart versions
+        print("Retrieving deployed releases in 'akash-services' namespace")
+        deployed_version_output = subprocess.check_output(
+            ["helm", "list", "-n", "akash-services", "-o", "json"],
+            text=True  # To get the output as a string instead of bytes
+        )
+        deployed_versions_list = json.loads(deployed_version_output) if deployed_version_output else []
+        print(f"Deployed Releases: {deployed_versions_list}")
+        
+        # Extract the deployed version for each release
+        deployed_versions = {release['name']: release['chart'].split('-')[-1] for release in deployed_versions_list}
+        print(f"Extracted deployed versions: {deployed_versions}")
+        
+        # Get the available helm chart versions
+        print("Retrieving available versions from Helm repo")
+        available_version_output = subprocess.check_output(
+            ["helm", "search", "repo", "akash", "-o", "json"],
+            text=True
+        )
+        available_versions = json.loads(available_version_output) if available_version_output else []
+        print(f"Available Versions: {available_versions}")
+
+        latest_versions = {entry['name'].split('/')[1]: entry['version'] for entry in available_versions}
+        print(f"Latest Available Versions: {latest_versions}")
+        
+        update_available = any(deployed_versions.get(chart_name) != latest_versions.get(chart_name)
+                               for chart_name in deployed_versions)
+        print(f"Update Available: {update_available}")
+        
+        return jsonify({
+            'deployed_versions': deployed_versions,
+            'latest_versions': latest_versions,
+            'update_available': update_available
+        })
+        
+    except subprocess.CalledProcessError as e:
+        print(f"Subprocess Error occurred: {str(e)}")
+        print(f"Command: {e.cmd}, Return Code: {e.returncode}, Output: {e.output}")
+        return jsonify({'error': 'Subprocess Error occurred while checking Helm Chart versions'})
+    except Exception as e:
+        print(f"General Error occurred: {str(e)}")
+        print("Exception Type: ", type(e))
+        print("Traceback: ", traceback.format_exc())
+        return jsonify({'error': 'General Error occurred while checking Helm Chart versions'})
+
 
 @get_cached_result
 def get_balance(account_address):
