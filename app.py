@@ -40,6 +40,43 @@ def get_cached_result(func):
 
     return wrapper
 
+@app.route('/set_static_ip')
+def set_static_ip():
+    try:
+        # Load current netplan configuration
+        with open('/etc/netplan/00-installer-config.yaml', 'r') as f:
+            config = yaml.safe_load(f)
+
+        # Check if already static
+        if not config.get('network', {}).get('ethernets', {}).get('enp6s18', {}).get('dhcp4', True):
+            return "IP address is already static."
+
+        # Get current IP and Netmask
+        ip_and_mask = subprocess.check_output(['hostname', '-I']).decode('utf-8').strip()
+        ip, mask = ip_and_mask.split(' ')[0], '255.255.255.0'  # You might need to modify this to get the correct mask
+        
+        # Get Gateway
+        gateway = subprocess.check_output(['ip', 'route', 'show', 'default']).decode('utf-8').strip().split(' ')[2]
+
+        # Update netplan configuration
+        config['network']['ethernets']['enp6s18'] = {
+            'dhcp4': False,
+            'addresses': [f"{ip}/{mask}"],
+            'gateway4': gateway,
+            'nameservers': {'addresses': ['8.8.8.8', '8.8.4.4']}
+        }
+
+        with open('/etc/netplan/00-installer-config.yaml', 'w') as f:
+            yaml.dump(config, f)
+
+        # Apply the configuration
+        subprocess.check_output(['netplan', 'apply'])
+
+        return f"Static IP set to: {ip}, Netmask: {mask}, Gateway: {gateway}"
+
+    except Exception as e:
+        return f"Error occurred: {str(e)}"
+
 # Check Helm versions installed vs. in repo
 @app.route('/check-helm-versions', methods=['GET'])
 def check_helm_versions():
