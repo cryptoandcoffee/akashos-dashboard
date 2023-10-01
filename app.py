@@ -127,7 +127,6 @@ def check_helm_versions():
         return jsonify({'error': 'General Error occurred while checking Helm Chart versions'})
 
 
-@get_cached_result
 def get_balance(account_address):
     gpu_enabled = False
     variables_file_path = '/home/akash/variables'
