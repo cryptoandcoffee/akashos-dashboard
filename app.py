@@ -13,6 +13,7 @@ import platform
 import cpuinfo
 import functools
 import time
+import traceback
 
 app = Flask(__name__)
 CORS(app)  # This will enable CORS for all routes
