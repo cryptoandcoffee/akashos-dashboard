@@ -271,7 +271,7 @@ def dashboard():
             elif line.startswith('TARGET_HD='):
                 line = f'TARGET_HD="{existing_variables.get("DISK_PRICE", "0.25")}"\n'
             elif line.startswith('TARGET_CPU='):
-                line = f'TARGET_CPU="{existing_variables.get("CPU_PRICE", "1.50")}"\n'
+                line = f'TARGET_CPU="{existing_variables.get("CPU_PRICE", "5.00")}"\n'
             updated_script_lines.append(line)
 
         with open(bid_engine_script_path, 'w') as f:
