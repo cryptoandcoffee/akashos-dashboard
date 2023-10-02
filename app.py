@@ -333,6 +333,17 @@ def dashboard():
                            provider_status=provider_status,
                            both_services_status=both_services_status)
 
+@app.route('/deploy-update-provider', methods=['GET'])
+def deploy_update_provider():
+    script_path = '/home/akash/run-helm-k3s.sh'
+    user = 'akash'  # Replace 'your_system_user' with the actual system username
+
+    result = subprocess.run(['sudo', '-u', user, 'bash', script_path, 'provider_setup'], shell=False)
+
+    if result.returncode == 0:
+        return 'Script executed successfully.'
+    else:
+        return 'Failed to execute script.'
 
 @app.route('/deploy-update', methods=['GET'])
 def deploy_update():
