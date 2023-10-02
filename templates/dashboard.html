@@ -615,7 +615,8 @@ hostname_operatorEventSource.onmessage = function (event) {
         hostname_operatorStatusElement.html('<span style="color: red;">🔴 ' + response.status + '</span>');
     }
 };
-
+	
+<!--
 document.addEventListener('DOMContentLoaded', function() {
     fetch('/check-helm-versions')
         .then(response => response.json())
@@ -626,7 +627,8 @@ document.addEventListener('DOMContentLoaded', function() {
         })
         .catch(error => console.error('Error checking for updates:', error));
 });
-
+-->
+	
 </script>
 
 </body>
