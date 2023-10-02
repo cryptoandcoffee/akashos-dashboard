@@ -277,7 +277,7 @@ def dashboard():
         with open(bid_engine_script_path, 'w') as f:
             f.writelines(updated_script_lines)
 
-        flash('Variables saved successfully. Provider restart is required.', 'success')
+        flash('Variables saved successfully. Click Re-Deploy Provider.', 'success')
         return redirect('/')
         
     else:
