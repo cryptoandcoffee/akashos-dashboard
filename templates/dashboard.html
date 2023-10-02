@@ -149,7 +149,7 @@
 
         <button type="submit" class="btn btn-success mt-3">Save</button>
         <a class="btn btn-primary mt-3" href="/download_variables">Download Variables</a>
-	<button class="btn btn-primary mt-3" onclick="deployUpdate()">Re-Deploy Provider</button>
+	<button class="btn btn-primary mt-3" onclick="deployUpdateProvider()">Re-Deploy Provider</button>
 	<span id="updateAvailable" class="text-danger"></span>
 
     </form>
@@ -528,6 +528,28 @@ function deployUpdate() {
 
     // Execute the deployment script asynchronously
     fetch('/deploy-update')
+        .then(function(response) {
+            if (response.ok) {
+                console.log('Deployment script executed successfully');
+                // Handle success response if needed
+            } else {
+                console.log('Failed to execute deployment script');
+                // Handle error response if needed
+            }
+        })
+        .catch(function(error) {
+            console.log('Error occurred while executing the deployment script:', error);
+            // Handle network error if needed
+        });
+}
+
+
+function deployUpdateProvider() {
+    // Prevent the default form submission behavior
+    event.preventDefault();
+
+    // Execute the deployment script asynchronously
+    fetch('/deploy-update-provider')
         .then(function(response) {
             if (response.ok) {
                 console.log('Deployment script executed successfully');
