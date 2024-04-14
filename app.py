@@ -407,7 +407,7 @@ def get_hostname_operator_status():
         pod_list = api_instance.list_namespaced_pod(namespace)
 
         # Find the pod with 'corehostname_operator-' in its name
-        hostname_operator_pod = next((pod for pod in pod_list.items if 'akash-hostname-operator-' in pod.metadata.name), None)
+        hostname_operator_pod = next((pod for pod in pod_list.items if 'operator-hostname-' in pod.metadata.name), None)
 
         if hostname_operator_pod is not None:
             # Retrieve the status of the 'coredns-' pod
