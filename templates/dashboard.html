@@ -389,6 +389,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.0/jquery.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.min.js"></script>
 <script>
+
 function confirmFormSubmission() {
     return confirm("Save Changes?");
 }
@@ -573,7 +574,9 @@ var rpcEventSource = new EventSource('/stream/rpc_status');
 rpcEventSource.onmessage = function (event) {
     var response = JSON.parse(event.data);
     var rpcStatusElement = $('#rpc-status');
-    if (response.status === 'Running') {
+    if (response.status.includes('Running - Node still syncing')) {
+        rpcStatusElement.html('<span style="color: green;">🟢 Running - Node still syncing</span>');
+    } else if (response.status === 'Running') {
         rpcStatusElement.html('<span style="color: green;">🟢 Running</span>');
     } else if (response.status === 'Pending') {
         rpcStatusElement.html('<span style="color: black;">🟡 Pending</span>');
@@ -582,6 +585,7 @@ rpcEventSource.onmessage = function (event) {
     } else {
         rpcStatusElement.html('<span style="color: red;">🔴 ' + response.status + '</span>');
     }
+
 };
 
 // Create an EventSource object to listen for Provider SSE updates
