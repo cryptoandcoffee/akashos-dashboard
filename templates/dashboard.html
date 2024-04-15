@@ -102,25 +102,25 @@
             <div class="col-md-6">
                 <div class="form-group">
                     <label for="REGION">Detected Region : {{ region }}</label>
-                    <input type="text" id="REGION" name="REGION" value="{{ variables['REGION'] }}" class="form-control">
+                    <input type="text" id="REGION" name="REGION" value="{{ variables['REGION'] | trim('"') }}" class="form-control">
                 </div>
             </div>
             <div class="col-md-6">
                 <div class="form-group">
                     <label for="CPU">Detected CPU : {{ processor }}</label>
-                    <input type="text" id="CPU" name="CPU" value="{{ variables['CPU'] }}" class="form-control">
+                    <input type="text" id="CPU" name="CPU" value="{{ variables['CPU'] | trim('"') }}" class="form-control">
                 </div>
             </div>
             <div class="col-md-6">
                 <div class="form-group">
                     <label for="UPLOAD">Upload Speed Mbps</label>
-                    <input type="text" id="UPLOAD" name="UPLOAD" value="{{ variables['UPLOAD'] }}" class="form-control">
+                    <input type="text" id="UPLOAD" name="UPLOAD" value="{{ variables['UPLOAD'] | trim('"') }}" class="form-control">
                 </div>
             </div>
             <div class="col-md-6">
                 <div class="form-group">
                     <label for="DOWNLOAD">Download Speed Mbps</label>
-                    <input type="text" id="DOWNLOAD" name="DOWNLOAD" value="{{ variables['DOWNLOAD'] }}" class="form-control">
+                    <input type="text" id="DOWNLOAD" name="DOWNLOAD" value="{{ variables['DOWNLOAD'] | trim('"') }}" class="form-control">
                 </div>
             </div>
         </div>
