@@ -253,7 +253,10 @@ def dashboard():
                 existing_variables[key] = value
 
         # Update the existing variables with the new ones
-        existing_variables.update(new_variables)
+        existing_variables.update({
+          key: f'"{value}"' if key in ['CPU', 'REGION', 'UPLOAD', 'DOWNLOAD', 'CPU_PRICE', 'MEMORY_PRICE', 'DISK_PRICE'] else value
+          for key, value in new_variables.items()
+        })
 
         # Write the updated variables back to the file
         with open('/home/akash/variables', 'w') as f:
