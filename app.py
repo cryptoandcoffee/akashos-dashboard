@@ -41,6 +41,7 @@ def get_cached_result(func):
 
     return wrapper
 
+
 @app.route('/set_static_ip')
 def set_static_ip():
     try:
@@ -550,11 +551,20 @@ def get_rpc_status():
 # Function to subscribe to RPC status updates
 def subscribe_to_rpc_status():
     while True:
-        # Retrieve the RPC status
         rpc_status = get_rpc_status()
+        if rpc_status == 'Running':
+            try:
+                output = subprocess.check_output(['curl', '-s', 'http://localhost:26657/status'])
+                data = json.loads(output)
+                catching_up = data['result']['sync_info']['catching_up']
+                if catching_up:
+                    rpc_status = 'Running - Node still syncing'
+            except Exception as e:
+                rpc_status = 'Error: ' + str(e)
 
-        # Yield the RPC status as SSE data
         yield 'data: ' + json.dumps({'status': rpc_status}) + '\n\n'
+        time.sleep(15)  # Wait for 15 seconds before checking again
+
 
 @app.route('/stream/rpc_status', methods=['GET'])
 def stream_rpc_status():
