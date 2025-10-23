@@ -618,13 +618,13 @@ def restart_service():
 
     elif service_name == 'provider':
         scale_down_stateful_set(namespace, 'akash-provider')
-        scale_up_stateful_set(namespace, 'akash-provder')
+        scale_up_stateful_set(namespace, 'akash-provider')
 
     elif service_name == 'both':
         scale_down_stateful_set(namespace, 'akash-node-1')
         scale_up_stateful_set(namespace, 'akash-node-1')
         scale_down_stateful_set(namespace, 'akash-provider')
-        scale_up_stateful_set(namespace, 'akash-provder')
+        scale_up_stateful_set(namespace, 'akash-provider')
 
 
     return redirect('/')
